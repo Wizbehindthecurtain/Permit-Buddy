@@ -1,9 +1,13 @@
 from pypdf import PdfReader, PdfWriter, generic
 import pandas as pd
 import os
+import pkg_resources
+
+print ("Pandas Version: ", pd.__version__)
+print("pypdf Version: " , pkg_resources.get_distribution('pypdf').version)
 
 # Example data
-template = 'Filled Electrical Form 24.pdf'
+template = 'template.pdf'
 current_path = os.getcwd()
 
 data_file_name = 'test excel 1.xlsx'
@@ -82,8 +86,10 @@ for index, row in excel_data.iterrows():
         'Zip': row['Zip']
     }
 
+    property_owner = row['Property Owner']
+
     # Process PDF for the current row
-    electrical_file_name = f'Filled Electrical Form {index + 1}.pdf'  # Output PDF file name
+    electrical_file_name = f'{property_owner} Filled Electrical Form.pdf'  # Output PDF file name
     output_file_path = os.path.join(electrical_output_folder, electrical_file_name)
 
     with open(template, 'rb') as file:
@@ -129,7 +135,7 @@ for index, row in excel_data.iterrows():
             writer.write(output_file)
             output_file.close()
 
-    structural_file_name = f'Filled Structural Form {index + 1}.pdf'  # Output PDF file name
+    structural_file_name = f'{property_owner} Filled Structural Form.pdf'  # Output PDF file name
     output_file_path = os.path.join(structural_output_folder, structural_file_name)
 
     with open(template, 'rb') as file:
