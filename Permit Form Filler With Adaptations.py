@@ -4,6 +4,29 @@ import os
 import pkg_resources
 from pypdf.generic import BooleanObject
 
+
+###########################################################################################################################
+### Author:     Jonathan Mazurkiewicz
+###
+### Date:       1/1/2024
+###
+### Purpose:    Gather input from excel, fill out, and create new PDFs for structural and electrical contractors.
+###
+### Functions:  get_user_input(excel_file_name, template_file_name)
+###             setup_file_paths(excel_file_name, electrical_folder_name, structural_folder_name)
+###             generate_pdf(template_name, output_folder, file_name, excel_data, static_data)
+###             process_and_generate_pdfs(template, data_path, electrical_output_folder, structural_output_folder,
+###                 electrical_static_data, structural_static_data)
+###
+### Notes:      (1) Utilizes pandas to read from excel. The field names MUST be named exactly the way they are in the template.
+###             Naming the fields wrong in row 1 of excel will result in the program not working properly.
+###
+###             (2) Utilizes pypdf Version 3.8.1. Ensure that you are installing the proper version as newer versions cause the
+###             code to be unstable. Will check for updates in the future. The command line script for installing is:
+###             pip install pypdf==3.8.1
+###
+###             (3) 
+
 def get_user_input(default_excel='test excel 1.xlsx', default_template='template.pdf'):
     print("Please enter the required file names or type 'default' to use the preset names.")
 
@@ -31,7 +54,7 @@ def setup_file_paths(data_file='test excel 1.xlsx', electrical_folder='Filled El
 
     return data_path, electrical_output_folder, structural_output_folder
 
-def generate_pdf(template, output_folder, file_name, pdf_fields_data, static_data):
+def generate_pdf(template, output_folder, file_name, excel_fields_data, static_data):
     output_file_path = os.path.join(output_folder, file_name)
     with open(template, 'rb') as file:
         reader = PdfReader(file)
@@ -52,11 +75,11 @@ def generate_pdf(template, output_folder, file_name, pdf_fields_data, static_dat
                     if field_name and field_type:
                         field_name = field_name.strip('()')
 
-                        # Check for text fields in both pdf_fields_data and static_data
+                        # Check for text fields in both excel_fields_data and static_data
                         if field_type == '/Tx':
-                            if field_name in pdf_fields_data:  # First preference to dynamic data
+                            if field_name in excel_fields_data:  # First preference to dynamic data
                                 obj.update({
-                                    generic.NameObject("/V"): generic.create_string_object(pdf_fields_data[field_name])
+                                    generic.NameObject("/V"): generic.create_string_object(excel_fields_data[field_name])
                                 })
                             elif field_name in static_data:  # Then static data
                                 obj.update({
@@ -88,8 +111,7 @@ def process_and_generate_pdfs(template, data_path, electrical_output_folder, str
     excel_data = pd.read_excel(data_path)
 
     for index, row in excel_data.iterrows():
-        pdf_fields_data = {
-            # ... (existing code to extract data from the row)
+        excel_fields_data = {
             'Job Address': row['Job Address'],
             'City': row['City'],
             'Tax Folio No': row['Tax Folio No'],
@@ -108,8 +130,8 @@ def process_and_generate_pdfs(template, data_path, electrical_output_folder, str
         electrical_file_name = f'{property_owner} Filled Electrical Form.pdf'
         structural_file_name = f'{property_owner} Filled Structural Form.pdf'
 
-        generate_pdf(template, electrical_output_folder, electrical_file_name, pdf_fields_data, electrical_static_data)
-        generate_pdf(template, structural_output_folder, structural_file_name, pdf_fields_data, structural_static_data)
+        generate_pdf(template, electrical_output_folder, electrical_file_name, excel_fields_data, electrical_static_data)
+        generate_pdf(template, structural_output_folder, structural_file_name, excel_fields_data, structural_static_data)
 
 # Main execution
 print("Pandas Version:", pd.__version__)
@@ -119,13 +141,12 @@ data_file_name, template_file_name = get_user_input()
 data_path, electrical_output_folder, structural_output_folder = setup_file_paths(data_file=data_file_name)
 
 template = 'template.pdf'
-data_path, electrical_output_folder, structural_output_folder = setup_file_paths()
 
 electrical_static_data = {
     'TRADE-ELECTRICALCheck Box': 'Yes',
     'Building Use': 'Residential',
-    'Dropdown4': 'VB',
-    'Occupancy Group': 'Residential',
+    'Dropdown4': 'VB', #Construction Type
+    'Occupancy Group': 'Residential', #Not a choice in the dropdown menu
     'Present Use': 'Residential',
     'Proposed Use': 'Residential',
     'Description of Work': 'Solar System Roof Mount and Interconnection',
