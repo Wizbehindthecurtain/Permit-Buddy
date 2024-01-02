@@ -2,6 +2,7 @@ from pypdf import PdfReader, PdfWriter, generic
 import pandas as pd
 import os
 import pkg_resources
+from pypdf.generic import BooleanObject
 
 print ("Pandas Version: ", pd.__version__)
 print("pypdf Version: " , pkg_resources.get_distribution('pypdf').version)
@@ -121,7 +122,13 @@ for index, row in excel_data.iterrows():
                             obj.update({
                                 generic.NameObject("/V"): generic.create_string_object('Yes'),
                                 generic.NameObject("/AS"): generic.create_string_object('Yes')
-                            })  
+                            })
+                    elif '/FT' in obj and obj['/FT'] == '/Ch':  # Dropdown field
+                        if field_name in pdf_fields_data:
+                            # Set the value for dropdown field
+                            obj.update({
+                                generic.NameObject("/V"): generic.create_string_object(pdf_fields_data[field_name])
+                            })
                             
 
             writer.add_page(page)
@@ -142,10 +149,14 @@ for index, row in excel_data.iterrows():
         reader = PdfReader(file)
         writer = PdfWriter()
 
+        if '/AcroForm' in reader.trailer["/Root"]:
+            reader.trailer["/Root"]["/AcroForm"].update({
+                generic.NameObject("/NeedAppearances"): BooleanObject(True)
+    })
+        
         for page_num in range(len(reader.pages)):
             page = reader.pages[page_num]
 
-            # reader.get_fields()
 
             if '/Annots' in page:
                 for field in page['/Annots']:
