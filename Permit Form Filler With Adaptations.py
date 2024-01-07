@@ -4,6 +4,7 @@ import os
 import pkg_resources
 from pypdf.generic import BooleanObject
 import traceback
+import sys
 
 
 ##############################################################################################################################
@@ -33,42 +34,85 @@ import traceback
 ###             then return the form field names. These values can then be used for excel sheet column titles and for static
 ###             info to allow you to play with the code yourself, if you need to change anything.
 ###
-###             (4) Uses Python Version 3.10.11 as of 1/1/2024
+###             (4) Uses Python Version 3.10.11 as of 1/1/2024. It should work fine with other versions of Python, but if in
+###             doubt, revert back to this version.
 ###
 ###             (5) This code accepts user input for file names. The template pdf file and the excel file MUST be inside of
 ###             the project folder. Enter the name of the file as it appears in the folder. Otherwise, enter nothing or
-###             'default' to use the preset file name.
+###             'default' to use the preset file name. If you do not want to give the user the option, comment out the line with
+###             the get_user_inputs() function.
 ###
 ###             (6) Exploring functionality on macOS. Here are the steps for installing on macOS currently (from Terminal):
 ###                 ** You can find the terminal in Applications -> Utilities -> Terminal
-###                 1. Install Homebrew
-###                     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"                 
-###                 2. Install Python
-###                     brew install python@3.10
-###                 3. Check the version to make sure it was installed correctly
-###                     python3 --version
-###                 4. Install Git for cloning this file
-###                     brew install git
-###                 5. Install VSCode: Go to the website, install, drag to applications, then launch.
-###                 6. Open the terminal again, and make a folder for your Python project.
-###                     mkdir ~/Documents/MyPythonProject
-###                     cd ~/Documents/MyPythonProject
-###                 7. Create virtual environment
-###                     python3 -m venv venv
-###                 8. Activate virtual environment
-###                     source venv/bin/activate
-###                 9. While virtual environment is active, install dependencies.
-###                     pip install pypdf==3.8.1
-###                     pip install pandas
-###                 10. Clone from github
-###                     Make sure you are in the project folder, then, in the Terminal:
-###                         git clone https://github.com/jonmaz4410/Jackson-PDF1.git
-###                     IF you need to update the code to the most recent version, enter:
-###                         git pull
-###                 11. (Optional) Set up your name and email if its the first time using Git
+###                 1.  Install Homebrew
+###                         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+###       
+###                 2.  Install Python
+###                         brew install python@3.10
+###                 *   If you find that 'brew' commands dont work, that means you need to edit the PATH
+###                 *   Check if you are using Bash or Zsh for your SHELL. Usually, if you see a '%' symbol at the end of
+###                 *   the terminal prompt, that means Zsh while '$' means Bash. If you are unsure, you can run this line:
+###                 *   echo $SHELL
+###                 *   macOS switched to Zsh recently. Depending on the SHELL, write the following into Terminal:
+###                 *   For Bash:
+###                 *       echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bash_profile
+###                         source ~/.bash_profile
+###                 *   For Zsh:
+###                 *       echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.zshrc
+###                 *       source ~/.zshrc
+###
+###                 3.  Check the version to make sure it was installed correctly
+###                         python3 --version
+###                 *   If the version does not read python3.10.xx, you will need to edit the PATH as mentioned above.
+###                 *   Feel free to try to run the code with your existing version of Python, but if it does not work,
+###                 *   come back here for troubleshooting.
+###
+###                 4.  Install Git for cloning this file
+###                         brew install git
+###
+###                 5.  Install VSCode: Go to the website, install, drag to applications, then launch.
+###
+###                 6.  Open the terminal again, and make a folder for your Python project.
+###                         mkdir ~/Documents/MyPythonProject
+###                         cd ~/Documents/MyPythonProject      
+###
+###                 7.  Create virtual environment
+###                         python3 -m venv venv
+###
+###                 8.  Activate virtual environment
+###                         source venv/bin/activate
+###                 *   Now, the terminal should say (venv)
+###
+###                 9.  While virtual environment is active, install dependencies.
+###                         pip install pypdf==3.8.1
+###                         pip install pandas
+###                         pip install openpyxl
+###
+###                 10. Clone files from github
+###                 *   Make sure you are in the project folder in Terminal. If you closed the terminal, then reopen and type:
+###                 *       cd ~/Documents/MyPythonProject
+###                 *   Then, paste this line:
+###                 *       git clone https://github.com/jonmaz4410/Jackson-PDF1.git
+###                 *   IF you need to update the code to the most recent version in the future, enter:
+###                 *       git pull
+###
+###                 11. Next, copy all of the files that were cloned and paste them in the PROJECT FOLDER. THE CODE WILL NOT WORK
+###                 otherwise! To be more clear, the cloned files will be in the folder "Jackson-PDF1". Copy the contents inside
+###                 of that folder into the place where the FOLDER exists (your project folder). Then, optionally, you can delete
+###                 the Jackson-PDF1 folder.
+###
+###                 12. (Optional) Set up your name and email if its the first time using Git
 ###                     git config --global user.name "Your Name"
 ###                     git config --global user.email "youremail@example.com"
-###                 12. Install necessary extensions in VSCode (Python, Pylance)
+###
+###                 13. Install necessary extensions in VSCode, if not already installed (Python, Pylance)
+###
+###                 14. Open the Project Folder in VSCode and set up the virtual environment
+###                 *   Press 'Cmd + Shift + P'
+###                 *   Type Python: Select Interpreter
+###                 *   Choose the one that points to the virtual environment folder
+###                 *       Should look like '.venv/bin/python'
+###
 ###                 13. Run the code! Hopefully it works. If not, send me an email at jonmaz4410@gmail.com and I'll try to help.
 ###
 ##############################################################################################################################
@@ -86,17 +130,23 @@ import traceback
 ### Notes:      Provides default values for file names. Only requires the name and not the extension.
    
 def get_user_input(default_excel='test excel 1', default_template='template'):
+
     print("Please enter the required file names without extensions or type 'default' to use the preset names.")
 
     data_file = input(f"Enter the name of the Excel file without extension (default: '{default_excel}'): ").strip()
+
     if data_file.lower() == 'default' or not data_file:
         data_file = default_excel
+
     data_file += '.xlsx'
 
     template_file = input(f"Enter the name of the PDF template file without extension (default: '{default_template}'): ").strip()
+
     if template_file.lower() == 'default' or not template_file:
         template_file = default_template
+
     template_file += '.pdf'
+    
     return data_file, template_file
 
 ##############################################################################################################################
@@ -237,8 +287,9 @@ def process_pdfs(template, data_path,
 ### Main Function ###
 
 # Print versions of dependencies to troubleshoot in case the program doesn't work.    
-print("Pandas Version:", pd.__version__)
-print("pypdf Version:", pkg_resources.get_distribution('pypdf').version)
+print("Pandas Version: ", pd.__version__)
+print("pypdf Version: ", pkg_resources.get_distribution('pypdf').version)
+print("Python Version: ", sys.version)
 
 
 try:
