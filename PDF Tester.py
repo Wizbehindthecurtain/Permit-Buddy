@@ -1,7 +1,7 @@
 from pypdf import PdfReader
 
 #Change name of the PDF you want to test here.
-template = 'template.pdf'
+template = 'F2 Filled Electrical Form.pdf'
 with open(template, 'rb') as file:
     reader = PdfReader(file)
 
