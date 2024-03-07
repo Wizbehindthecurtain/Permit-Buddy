@@ -18,7 +18,7 @@ import sys
 ###             (2) Utilizes fitz (PyMuPDF) to fill in the templates. This is a comprehensive library for PDF modifications.
 ###
 ###             (3) When filling out the form fields in a PDF, you need the assigned 'name' field. The file is made to work with
-###             other templates by adding the correct fields into field_mappings and fields_to_skip_dict. For each new template,
+###             other templates by adding the correct fields into "field_mappings" and "fields_to_skip_dict". For each new template,
 ###             please use the PDF Tester file to find the correct field names until a GUI can be set up.
 ###
 ###             (4) Uses Python Version 3.10.11 as of 1/1/2024. It should work fine with other versions of Python, but if in
@@ -222,13 +222,16 @@ class PDFProcessor:
         return data_file, template_file, fields_to_skip_current
 
     def setup_file_paths(self):
-        current_path = os.getcwd()
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(current_path)
         data_path = os.path.join(current_path, self.data_file)
         electrical_output_folder = os.path.join(current_path, 'Filled Electrical PDFs')
         os.makedirs(electrical_output_folder, exist_ok=True)
         structural_output_folder = os.path.join(current_path, 'Filled Structural PDFs')
         os.makedirs(structural_output_folder, exist_ok=True)
+        print(current_path)
         return data_path, electrical_output_folder, structural_output_folder
+    
 
     def generate_pdf_with_fitz(self, folder_type, excel_fields_data):
         output_folder = self.electrical_output_folder if folder_type == 'electrical' else self.structural_output_folder
